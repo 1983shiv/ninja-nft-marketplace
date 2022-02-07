@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 
-pragma solidity ^0.8.3;
+pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
@@ -35,8 +35,8 @@ contract NFTMarket is ReentrancyGuard{
         uint indexed itemId,
         address indexed nftContract,
         uint256 indexed tokenId,
-        address payable seller,
-        address payable owner,
+        address seller,
+        address owner,
         uint256 price,
         bool sold
     );
@@ -64,6 +64,7 @@ contract NFTMarket is ReentrancyGuard{
             false
         );
 
+        
         IERC721(nftContract).transferFrom(msg.sender, address(this), tokenId);
 
         emit MarketItemCreated(
@@ -147,12 +148,33 @@ contract NFTMarket is ReentrancyGuard{
         }
 
         return items;
-
-        /*
-        * Returns only items a user has created
-        */
-
-        
     }
 
+    /*
+    * Returns only items a user has created
+    */
+
+    function fetchItemsCreated() public view returns(MarketItem[] memory){
+        uint totalItemCount = _itemIds.current();
+        uint itemCount = 0;
+        uint currentIndex = 0;
+
+        for(uint i =0; i< totalItemCount; i++){
+            if(idToMarketItem[i+1].seller == msg.sender){
+                itemCount += 1;
+            }
+        }
+
+        MarketItem[] memory items = new MarketItem[](itemCount);
+        for(uint i =0; i< totalItemCount; i++){
+            if(idToMarketItem[i+1].seller == msg.sender){
+                uint currentId = i + 1;
+                MarketItem storage currentItem = idToMarketItem[currentId];
+                items[currentIndex] = currentItem;
+                currentIndex += 1;
+            }
+        }
+
+        return items;
+    }
 }
